@@ -21,10 +21,18 @@ const userSchema =new mongoose.Schema({
         required:true,
     
     },
+    confirmPassword:{
+        type:String,
+        required:true,
+    
+    },
     accountType:{
         type:String,
         enum:["Admin","Student","Instructor"],
         required:true
+    },
+    contactNumber:{
+        type:Number,
     },
     additionalDetails:{
         //Links to a separate Profile document (like address, bio, etc.).
