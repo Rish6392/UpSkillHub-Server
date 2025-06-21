@@ -5,6 +5,7 @@ const Profile = require("../models/Profile");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const mailSender = require("../utils/mailSender");
 
 //send otp
 exports.sendOTP = async (req, res) => {
@@ -205,45 +206,110 @@ exports.login = async (req, res) => {
             });
             user.token = token;
             user.password = undefined;
-        
-        //create cookie and send response
-        const options = {
-            expires: new Date(date.now() + 3 * 24 * 60 * 60 * 1000),
-            httpOnly: true,
+
+            //create cookie and send response
+            const options = {
+                expires: new Date(date.now() + 3 * 24 * 60 * 60 * 1000),
+                httpOnly: true,
+            }
+            res.cookie("token", token, options).status(200).json({
+                success: true,
+                token,
+                user,
+                message: "Logged in successfully",
+            })
         }
-        res.cookie("token", token, options).status(200).json({
-            success: true,
-            token,
-            user,
-            message: "Logged in successfully",
-        })
-    }
-    else{
-        return res.status(401).json({
-           success:false,
-           message:"Password is incorrect",
-        });
-    }
+        else {
+            return res.status(401).json({
+                success: false,
+                message: "Password is incorrect",
+            });
+        }
     }
     catch (error) {
-       console.log(error);
-       return res.status(500).json({
-        success:false,
-        message:"Login Failure,please try again",
-       });
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Login Failure,please try again",
+        });
     }
 }
 
 
 //change password
-exports.changePassword = async(req,res) => {
-    //get data from req body
-    //get oldPassword,newpassword.confirmNewPassword
-    //validation
+exports.changePassword = async (req, res) => {
+    try {
+        //get data from req body
+        const { email, oldPassword, newPassword, confirmNewPassword } = req.body;
+        //get oldPassword,newpassword,confirmNewPassword
 
-    //update password in DB
-    //send mail - Password update
-    //return response
+        // Step 2: Validate all required fields
+        if (!email || !oldPassword || !newPassword || !confirmNewPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required",
+            });
+        }
+
+        // Step 3: Check if new password and confirm password match
+        if (newPassword !== confirmNewPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New password and confirm password do not match",
+            });
+        }
+
+
+        // Step 4: Find user from DB using email
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // step 5: Compre old password with the hashed password in DB
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Old password is incorrect",
+            });
+        }
+
+        // Step 6: Hash the new Password before storing
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        //update password in DB
+        user.password = hashedPassword;
+        await user.save();
+
+
+
+        // Step 5: Send confirmation email
+        await mailSender(
+            email,
+            "Password Changed Successfully",
+            `<p>Your password has been updated successfully. If this wasn't you, please reset it immediately or contact support.</p>`
+        );
+
+        //return response
+        return res.status(200).json({
+            success: true,
+            message: "Password send Successfully",
+            user,
+        });
+    }
+    catch (error) {
+        console.error("Error changing password:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+
 }
 
 
