@@ -13,7 +13,7 @@ const courseSchema = new mongoose.Schema({
         required:true,
     },
     whatYouWillLearn:{
-        tye:String,
+        type:String,
     },
     courseContent:[
         {
@@ -31,7 +31,8 @@ const courseSchema = new mongoose.Schema({
         type:Number,
     },
     thumbnail:{
-        type:String,
+        type:String, // URL of the course thumbnail image.
+                      //Usually stored in Cloudinary or another CDN.
     },
     tag:{
         type:mongoose.Schema.Types.ObjectId,
