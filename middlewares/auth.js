@@ -9,7 +9,7 @@ exports.auth = async(req,res,next)=>{
        // extract token
        const token = req.cookies.token
                         ||req.boby.token
-                        || req.header("Authorisation").replace("Bearer ","");
+                        ||req.header("Authorisation").replace("Bearer ","");
 
         // if token miiissing,then return response
         if(!token){
