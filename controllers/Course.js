@@ -1,5 +1,6 @@
+const Category = require("../models/category");
 const Course = require("../models/Course");
-const Tag = require("../models/tags");
+///const Tag = require("../models/category");
 const User = require("../models/User");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
@@ -8,7 +9,7 @@ const { uploadImageToCloudinary } = require("../utils/imageUploader");
 exports.createCourse = async (req, res) => {
     try {
         //fetch data
-        const { courseName, courseDescription, whatYouWillLearn, tag } = req.body;
+        const { courseName, courseDescription, whatYouWillLearn, category } = req.body;
 
         //get thumbnail
         // You're extracting the uploaded thumbnail file from the form.
@@ -16,7 +17,7 @@ exports.createCourse = async (req, res) => {
         const thumbnail = req.files.thumbnailImage;
 
         //validation
-        if (!courseName || !courseDescription || !whatYouWillLearn || !tag || !thumbnail) {
+        if (!courseName || !courseDescription || !whatYouWillLearn || !category || !thumbnail) {
             return res.status(400).json({  // 400 Bad Request
                 success: false,
                 messge: "All fields are required"
@@ -44,11 +45,11 @@ exports.createCourse = async (req, res) => {
         // cheque given tag is valid or not 
         //You're ensuring the tag provided exists in your Tag collection.
         //  This helps avoid saving invalid category references.
-        const tagDetails = await Tag.findById(tag);
-        if (!tagDetails) {
+        const categoryDetails = await Category.findById(category);
+        if (!categoryDetails) {
             return res.status(404).json({
                 success: false,
-                message: "Tag Details not found"
+                message: "Category Details not found"
             })
         }
 
@@ -61,7 +62,7 @@ exports.createCourse = async (req, res) => {
             courseDescription,
             instructor: instructorDetails._id,
             whatYouWillLearn: whatYouWillLearn,
-            tag: tagDetails._id,
+            category: categoryDetails._id,
             thumbnail: thumbnailImage.secure_url,
         })
 
@@ -85,8 +86,8 @@ exports.createCourse = async (req, res) => {
         //{ new: true } makes sure the updated tag is returned (if needed).
 
 
-        await Tag.findByIdAndUpdate(
-            tagDetails._id,
+        await Category.findByIdAndUpdate(
+            categoryDetails._id,
             {
                 $push: {
                     courses: newCourse._id,
