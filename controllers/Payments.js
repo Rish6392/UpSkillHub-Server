@@ -63,7 +63,7 @@ exports.capturePayment = async (req, res) => {
             amount: amount * 100,
             currency,
             receipt: Math.random(Date.now()).toString(),
-            notes: {
+            notes: {  //IMP
                 courseId: course_id,
                 userId,
             }
@@ -100,5 +100,92 @@ exports.capturePayment = async (req, res) => {
             success: false,
             message: error.message,
         });
+    }
+}
+
+
+//verify Signature of razorpay and Server
+
+exports.verifySignature = async (req, res) => {
+    try {
+        // server secret
+        const webhookSecret = "12345678";
+        //razorpay signature
+        const signature = req.headers["x-razorpay-signature"];
+
+        // #3 steps 
+        const shasum = crypto.createHmac("sha256", webhookSecret);  //
+        shasum.update(JSON.stringify(req.body));
+        const digest = shasum.digest("hex");
+
+        if (signature === digest) {
+            console.log("Payment is Authorised");
+
+            //
+            const { courseId, userId} = req.body.payload.payment.entity.notes;  //testing kar ke dekh lege
+
+            try {
+                //fulfill the action
+
+                //find the course and enrol the student in it
+                const enrolledCourse = await Course.findOneAndUpdate(
+                    { _id: courseId },
+                    { $push: { studentEnrolled: userId } },
+                    { new: true },
+                );
+
+                if (!enrolledCourse) {
+                    return res.status(500).json({
+                        success: false,
+                        message: "Course not found",
+                    })
+                }
+
+                console.log(enrolledCourse);
+
+                //find the student and add the course to their list of enrolled courses
+                const enrolledStudent = await User.findOneAndUpdate(
+                    { _id: userId },
+                    { $push: { courses: courseId } },
+                    { new: true },
+                );
+                console.log(enrolledStudent);
+
+                //mail send karo confirmation wala
+                const emailResponse = await mailSender(
+                    enrolledStudent.email,
+                    "Congratulations from upskillhub",
+                    "Congratulation , you are onboarded into new Course"
+                );
+                console.log(emailResponse);
+
+                return res.status(200).json({
+                    success: true,
+                    message: "Signature Verified and Course added",
+                })
+            }
+            catch (error) {
+                console.log(error);
+                return res.status(500).json({
+                    success: false,
+                    message: error.message,
+                })
+            }
+
+        }
+        else{
+            return res.status(400).json({
+                success:false,
+                message:"Invalid Request",
+            })
+        }
+
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        })
     }
 }
