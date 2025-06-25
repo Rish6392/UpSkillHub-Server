@@ -12,7 +12,7 @@ exports.createSubSection = async(req,res)=>{
         //extract file/vodeo
         const video = req.files.videoFile;
         //validation
-        if(!sectionId || !title || timeDuartion || !description || !video){
+        if(!sectionId || !title || !timeDuartion || !description || !video){
             return res.status(400).json({
                 success:false,
                 message:"All fields"
@@ -36,7 +36,7 @@ exports.createSubSection = async(req,res)=>{
                                                                         );
         //HW : log updated section here,after adding populated query 
         //return response
-        return res.ststus(200).json({
+        return res.status(200).json({
             success:true,
             message:"Sub Section Created Successfully",
             updatedSection,
@@ -53,5 +53,98 @@ exports.createSubSection = async(req,res)=>{
 
 
 ///HW : updateSubSection
+exports.updateSubSection = async (req, res) => {
+    try {
+        //data input
+        const{subSectionId,title,timeDuartion,description} = req.body;
+        //validation
+        if (!title || !subSectionId || !timeDuartion || !description) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing Properties"
+            });
+        }
+        // // If video is also being updated
+        // if (req.files && req.files.videoFile) {
+        //     const video = req.files.videoFile;
+        //     const uploadDetails = await uploadImageToCloudinary(video, process.env.FOLDER_NAME);
+        //     updateData.videoUrl = uploadDetails.secure_url;
+        // }
+        //update data 
+        const updatedSubSection = await SubSection.findByIdAndUpdate(subSectionId,
+                                                           { title,timeDuartion,description },
+                                                           { new: true },
+                                                            );
+         // If subsection not found
+        if (!updatedSubSection) {
+            return res.status(404).json({
+                success: false,
+                message: "SubSection not found",
+            });
+        }                                                   
+        //return res
+        return res.status(200).json({
+            success:true,
+            message:"SubSection Updated Successfully",
+            updatedSubSection,
+        })
+
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: true,
+            message: "Unable to update SubSection,please try again",
+            error: error.message,
+        })
+    }
+}
+
 
 //HW: deleteSubSection
+const SubSection = require("../models/SubSection");
+const Section = require("../models/Section");
+
+exports.deleteSubSection = async (req, res) => {
+    try {
+        // Step 1: Get subSectionId and sectionId from request body
+        const { subSectionId, sectionId } = req.body;
+
+        // Step 2: Validate input
+        if (!subSectionId || !sectionId) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing subSectionId or sectionId",
+            });
+        }
+
+        // Step 3: Delete the SubSection document
+        const deletedSubSection = await SubSection.findByIdAndDelete(subSectionId);
+
+        if (!deletedSubSection) {
+            return res.status(404).json({
+                success: false,
+                message: "SubSection not found",
+            });
+        }
+
+        // Step 4: Remove subSection reference from the Section document
+        await Section.findByIdAndUpdate(
+            sectionId,
+            { $pull: { subSection: subSectionId } },
+            { new: true }
+        );
+
+        // Step 5: Send response
+        return res.status(200).json({
+            success: true,
+            message: "SubSection deleted successfully",
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete SubSection",
+            error: error.message,
+        });
+    }
+};
+

@@ -71,7 +71,7 @@ exports.updateSection = async (req, res) => {
     catch (error) {
         return res.status(500).json({
             success: true,
-            message: "Unable to create Section,please try again",
+            message: "Unable to update Section,please try again",
             error: error.message,
         })
     }
@@ -84,6 +84,11 @@ exports.deleteSection = async(req,res)=>{
     try{
         //getId- asuming that we are sending ID in params
         const {sectionId} = req.params;
+        //From the req.params object, extract the value of the sectionId property and assign it to a variable named sectionId.
+        //In an Express route, req.params is an object containing route parameters — 
+        // that is, values encoded in the URL path.
+        //for ex app.delete('/section/:sectionId', deleteSection);
+
         
         //use findByIdAndDelete
         await Section.findByIdAndDelete(sectionId);
