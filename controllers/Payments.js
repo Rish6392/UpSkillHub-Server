@@ -122,7 +122,7 @@ exports.verifySignature = async (req, res) => {
             console.log("Payment is Authorised");
 
             //
-            const { courseId, userId} = req.body.payload.payment.entity.notes;  //testing kar ke dekh lege
+            const { courseId, userId} = req.body.payload.payment.entity.notes;//testing kar ke dekh lege
 
             try {
                 //fulfill the action
