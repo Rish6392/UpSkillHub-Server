@@ -241,16 +241,55 @@ exports.login = async (req, res) => {
 //change password
 exports.changePassword = async (req, res) => {
     try {
-       
+       // console.log("entered backend")
+    const { password, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!password || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all details",
+      });
+    }
+
+    
+    const userDetails = await User.findById(userId);
+
+    if(!userDetails){
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+    const passMatch = await bcrypt.compare(password, userDetails.password);
+
+    if(!passMatch){
+      return res.status(403).json({
+        success:false,
+        message:"Password did'nt mathced",
+      })
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    userDetails.password = hashedPassword;
+    // console.log("after hashing of password")
+    await userDetails.save();
+    return res.status(200).json({
+      success: true,
+      
+      message: "Password updated successfully",
+    });
     }
     catch (error) {
         console.error("Error changing password:", error);
         return res.status(500).json({
             success: false,
-            message: "Internal server error",
+            message: error.message,
         });
     }
 
 }
+
+//logout
 
 
