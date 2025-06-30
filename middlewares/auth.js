@@ -26,11 +26,12 @@ exports.auth = async(req,res,next)=>{
           req.user=decode;
           
         }
-        catch(err){
+        catch(error){
            // verifiaction issue
+           console.log(error.message);
            return res.status(401).json({
             succes:false,
-            message:"token is invalid"
+            message:error.message,
            })
         }
         next();
@@ -47,7 +48,7 @@ exports.auth = async(req,res,next)=>{
 exports.isStudent = async(req,res,next)=>{
     try{
       // ek tarika accountType ko req.user se chek karlo
-      if(req.user.accountTypesattus(401) !=="Student"){
+      if(req.user.accountType !=="Student"){
         return res.status(401).json({
             success:false,
             message:"this is a protected route for Student only"
@@ -68,7 +69,7 @@ exports.isStudent = async(req,res,next)=>{
 exports.isInstructor = async(req,res,next)=>{
     try{
       // ek tarika accountType ko req.user se chek karlo
-      if(req.user.accountTypesattus(401) !=="isInstructor"){
+      if(req.user.accountType !=="isInstructor"){
         return res.status(401).json({
             success:false,
             message:"this is a protected route for Instructor only"
