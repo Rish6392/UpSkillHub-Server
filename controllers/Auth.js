@@ -27,6 +27,7 @@ exports.sendOTP = async (req, res) => {
 
         //generate OTP  => download package otp generator
         var otp = otpGenerator.generate(6, {    // error chatgpt saying  otpGenerator.generate(6, {...})
+            digits: true,
             upperCaseAlphabets: false,
             lowerCaseAlphabets: false,
             specialChars: false,
@@ -34,15 +35,16 @@ exports.sendOTP = async (req, res) => {
         console.log("OTP generated: ", otp);
 
         //check unique otp or not
-        let result = await OTP.findOne({ otp: otp });
+        let result = await OTP.findOne({ otp });
 
         while (result) {
-            otp = otpGenerator(6, {
+            otp = otpGenerator.generate(6, {
+                digits: true,
                 upperCaseAlphabets: false,
                 lowerCaseAlphabets: false,
                 specialChars: false,
             });
-            result = await OTP.findOne({ otp: otp });
+            result = await OTP.findOne({ otp });
         }
 
         // entry of this unique otp in your database
@@ -99,7 +101,7 @@ exports.signUp = async (req, res) => {
         if (password != confirmPassword) {
             return res.status(400).json({
                 success: false,
-                message: "Password and Confirm Password do not matcch ,please try again",
+                message: "Password and Confirm Password do not match ,please try again",
             });
         }
         //check user already exist or not 
@@ -202,7 +204,7 @@ exports.login = async (req, res) => {
                 accountType: user.accountType,
             }
             const token = jwt.sign(payload, process.env.JWT_SECRET, {
-                expiresIn: "2h",
+                expiresIn: "24h",
             });
             user.token = token;
             user.password = undefined;
@@ -239,68 +241,7 @@ exports.login = async (req, res) => {
 //change password
 exports.changePassword = async (req, res) => {
     try {
-        //get data from req body
-        const { email, oldPassword, newPassword, confirmNewPassword } = req.body;
-        //get oldPassword,newpassword,confirmNewPassword
-
-        // Step 2: Validate all required fields
-        if (!email || !oldPassword || !newPassword || !confirmNewPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields are required",
-            });
-        }
-
-        // Step 3: Check if new password and confirm password match
-        if (newPassword !== confirmNewPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "New password and confirm password do not match",
-            });
-        }
-
-
-        // Step 4: Find user from DB using email
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        // step 5: Compre old password with the hashed password in DB
-        const isMatch = await bcrypt.compare(oldPassword, user.password);
-        if (!isMatch) {
-            return res.status(401).json({
-                success: false,
-                message: "Old password is incorrect",
-            });
-        }
-
-        // Step 6: Hash the new Password before storing
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        //update password in DB
-        user.password = hashedPassword;
-        await user.save();
-
-
-
-        // Step 5: Send confirmation email
-        await mailSender(
-            email,
-            "Password Changed Successfully",
-            `<p>Your password has been updated successfully. If this wasn't you, please reset it immediately or contact support.</p>`
-        );
-
-        //return response
-        return res.status(200).json({
-            success: true,
-            message: "Password send Successfully",
-            user,
-        });
+       
     }
     catch (error) {
         console.error("Error changing password:", error);
