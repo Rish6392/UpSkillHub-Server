@@ -7,11 +7,12 @@ const categorySchema = new mongoose.Schema({
      },
      description:{
         type:String,
+        trim:true,
      },
-     course:{   // array
+     course:[{   // array
         type:mongoose.Schema.Types.ObjectId,
         ref:"Course",
-     },
+     }],
 });
 
 module.exports= mongoose.model("Category",categorySchema);
