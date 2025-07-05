@@ -1,5 +1,5 @@
 const User = require("../models/User")
-
+require("dotenv").config();
 const mailSender = require("../utils/mailSender");
 const bcrypt = require("bcrypt")
 
@@ -39,7 +39,7 @@ exports.resetPasswordToken = async (requestAnimationFrame, res) => {
         // return response
         return res.json({
             success: true,
-            message: "Email Sent successfully,please check email and change assword"
+            message: "Email Sent successfully,please check email and change password"
         })
 
 
@@ -77,7 +77,7 @@ exports.resetPassword = async (req, res) => {
                 message: "Token Invalid"
             })
         }
-        // token tome check 
+        // token time check 
         if (userDetails.resetPasswordExpires < date.now()) {
             return res.json({
                 success: false,
