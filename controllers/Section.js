@@ -25,7 +25,12 @@ exports.createSection = async (req, res) => {
                 }
             },
             { new: true },
-        );
+        ).populate({
+            path: "courseContent",
+            populate: {
+                path: "subSection"
+            },
+        });
         // hw use populate to replace section/subsection both in the updatedCourseDetails
         // return res
         return res.status(200).json({
@@ -48,7 +53,7 @@ exports.createSection = async (req, res) => {
 exports.updateSection = async (req, res) => {
     try {
         //data input
-        const { sectionName, sectionId } = req.body;
+        const { sectionName, sectionId, courseId } = req.body;
         //validation
         if (!sectionName || !sectionId) {
             return res.status(400).json({
@@ -58,13 +63,21 @@ exports.updateSection = async (req, res) => {
         }
         //update data 
         const section = await Section.findByIdAndUpdate(sectionId,
-                                                           { sectionName },
-                                                           { new: true },
-                                                            );
+            { sectionName },
+            { new: true },
+        );
+
+        const courseDetails = await Course.findById(courseId).populate({
+            path: "courseContent",
+            populate: {
+                path: "subSection"
+            },
+        });
         //return res
         return res.status(200).json({
-            success:true,
-            message:"Section Updated Successfully"
+            success: true,
+            message: "Section Updated Successfully",
+            data:courseDetails,
         })
 
     }
@@ -80,31 +93,44 @@ exports.updateSection = async (req, res) => {
 
 //deleteSection
 
-exports.deleteSection = async(req,res)=>{
-    try{
-        //getId- asuming that we are sending ID in params
-        const {sectionId} = req.params;
-        //From the req.params object, extract the value of the sectionId property and assign it to a variable named sectionId.
-        //In an Express route, req.params is an object containing route parameters — 
-        // that is, values encoded in the URL path.
-        //for ex app.delete('/section/:sectionId', deleteSection);
+exports.deleteSection = async (req, res) => {
+  try {
+    // Assuming that we are sending id in params
+    // const {sectionId} = req. ;
+    const { sectionId, courseId } = req.body;
+    const courseDetails = await Course.findByIdAndUpdate(
+      { _id: courseId },
+      {
+        $pull: {
+          courseContent: sectionId,
+        },
+      },
+      {
+        new: true,
+      }
+    )
+      .populate({
+        path:"courseContent",
+        populate : {
+          path:"subSection"
+        }
+      })
+      .exec();
 
-        
-        //use findByIdAndDelete
-        await Section.findByIdAndDelete(sectionId);
-        //TODO [testing time]: do we need to delete the entry from the course schema
-        //return res
-        return res.status(200).json({
-            success: true,
-            message: "Section Deleted Successfully",
+    await Section.findByIdAndDelete(sectionId);
 
-        })
-    }
-    catch(error){
-        return res.status(500).json({
-            success: false,
-            message: "Unable to create Section,please try again",
-            error: error.message,
-        })
-    }
-}
+    //do we need to delete the entry from schema?
+
+    return res.status(200).json({
+      success: true,
+      message: "Section deleted successfully",
+      data: courseDetails,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to create section , please try again ",
+      error: error.message,
+    });
+  }
+};
