@@ -44,7 +44,7 @@ const courseSchema = new mongoose.Schema({
     category:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Category", 
-    }
+    },
     studentEnrolled:[
         {
             type:mongoose.Schema.Types.ObjectId,

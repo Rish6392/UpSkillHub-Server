@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { auth,isStudent, isInstructor } = require("../middleware/auth");
+const { auth,isStudent, isInstructor } = require("../middlewares/auth");
 
 const {capturePayment,verifySignature,
     enrolledStudents,sendPaymentSuccessEmail} 

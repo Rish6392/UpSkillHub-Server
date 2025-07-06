@@ -7,10 +7,10 @@ const paymentRoutes = require("./routes/Payments")
 const courseRoutes = require("./routes/Course")
 const contactUsRoutes = require("./routes/ContactUs")
 
-const db = require("../config/database")
+const db = require("./config/database")
 const cookieParser = require('cookie-parser');
 const cors = require("cors"); // backend-frontent connect
-const {cloudinaryConnect} = require("../config/cloudinary")
+const {cloudinaryConnect} = require("./config/cloudinary")
 require('dotenv').config();
 const fileUpload = require("express-fileupload");
 const port = process.env.PORT || 4000;

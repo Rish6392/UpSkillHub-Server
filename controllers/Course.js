@@ -6,8 +6,8 @@ const { uploadImageToCloudinary } = require("../utils/imageUploader");
 const courseProgress = require("../models/courseProgress");
 const { convertSecondsToDuration } = require("../utils/secToDuration");
 const { deleteImage, deleteImages } = require("../utils/deleteImageAndVideos");
-const Subsection = require("../models/Subsection");
-const Section = require("../models/section");
+const Subsection = require("../models/SubSection");
+const Section = require("../models/Section");
 const RatingAndReview = require("../models/RatingAndReview");
 const category = require("../models/category");
 
