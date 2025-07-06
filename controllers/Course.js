@@ -1,15 +1,22 @@
-const Category = require("../models/category");
 const Course = require("../models/Course");
-///const Tag = require("../models/category");
+const Category = require("../models/category");
 const User = require("../models/User");
+// const SubSection = require("../models/Subsection")
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
-
+const courseProgress = require("../models/courseProgress");
+const { convertSecondsToDuration } = require("../utils/secToDuration");
+const { deleteImage, deleteImages } = require("../utils/deleteImageAndVideos");
+const Subsection = require("../models/Subsection");
+const Section = require("../models/section");
+const RatingAndReview = require("../models/RatingAndReview");
+const category = require("../models/category");
 
 // createCourse handler function
 exports.createCourse = async (req, res) => {
     try {
         //fetch data
-        const { courseName, courseDescription, whatYouWillLearn, price, tag, category, instructions, status } = req.body;
+        const { courseName, courseDescription, whatYouWillLearn,
+            price, tag, category, instructions, status } = req.body;
         console.log("instructions", instructions)
 
         //get thumbnail
@@ -127,9 +134,79 @@ exports.createCourse = async (req, res) => {
 }
 
 
+//updateCourse
+exports.updateCourse = async (req, res) => {
+    try {
+        const { courseId } = req.body;
+        const updates = req.body;
 
+        console.log("updates", updates);
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found",
+            });
+        }
+        console.log("req.files", req.files);
 
+        if (req.files) {
+            const thumbnail = req.files.thumbnail;
+            const thumbnailImage = await uploadImageToCloudinary(
+                thumbnail,
+                process.env.FOLDER_NAME
+            );
 
+            console.log("thumb", thumbnailImage);
+            course.thumbnail = thumbnailImage.secure_url;
+        }
+
+        for (key in updates) {
+            if (updates.hasOwnProperty(key)) {
+                if (key === "tag" || key === "instructions") {
+                    course[key] = JSON.parse(updates[key]);
+                }
+                else {
+                    course[key] = updates[key];
+                }
+            }
+        }
+
+        await course.save();
+
+        const newCourse = await Course.findById(courseId)
+            .populate({
+                path: "instructor",
+                populate: {
+                    path: "additionalDetails",
+                },
+            })
+            .populate("category")
+            .populate("ratingAndReview")
+            .populate({
+                path: "courseContent",
+                populate: {
+                    path: "subSection",
+                },
+            })
+            .exec();
+
+        return res.status(200).json({
+            success: true,
+            message: "course updated successfully",
+            data: newCourse,
+        });
+    }
+    catch (error) {
+        console.log("error in update course controller", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+
+//deleteCourse
 
 
 // getAllCourses handler function
