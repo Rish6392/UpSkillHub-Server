@@ -319,8 +319,8 @@ exports.showAllCourses = async (req, res) => {
                 studentEnrolled: true,
             }
         )
-        .populate("instructor")
-        .exec();
+            .populate("instructor")
+            .exec();
 
         return res.status(200).json({
             success: true,
@@ -345,8 +345,9 @@ exports.getCourseDetails = async (req, res) => {
     try {
         //get courseId
         const { courseId } = req.body;
+        const userId = req.user.id;
         //find course details
-        const courseDetails = await Course.find(
+        const courseDetails = await Course.findById(
             { _id: courseId })
             .populate(
                 {
@@ -366,6 +367,13 @@ exports.getCourseDetails = async (req, res) => {
             })
             .exec();
 
+        let courseProgressCount = await courseProgress.findOne({
+            courseId: courseId,
+            userId: userId,
+        });
+
+        console.log("courseProgressCount: ", courseProgressCount);
+
         //validation
         if (!courseDetails) {
             return res.status(400).json({
@@ -373,13 +381,30 @@ exports.getCourseDetails = async (req, res) => {
                 message: `Could not find the course with ${courseId}`,
             })
         }
+        console.log(courseDetails);
 
-        //return response
+        let totalDurationInSeconds = 0;
+        courseDetails.courseContent.forEach((content) => {
+            content.subSection.forEach((subSection) => {
+                const timeDurationInSeconds = parseInt(subSection.timeDuration);
+                totalDurationInSeconds += timeDurationInSeconds;
+            });
+        });
+
+        const totalDuration = convertSecondsToDuration(totalDurationInSeconds);
+
         return res.status(200).json({
             success: true,
-            message: "Course Detail fetched Successfully",
-            data: courseDetails,
-        })
+            message: "Course details fetched successfully",
+            data: {
+                courseDetails,
+                totalDuration,
+                completedVideos: courseProgressCount?.completedVideos
+                    ? courseProgressCount?.completedVideos
+                    : ["none"],
+            },
+        }); 
+       
 
 
     }
@@ -391,3 +416,47 @@ exports.getCourseDetails = async (req, res) => {
         });
     }
 }
+
+exports.fetchInstructorCourses = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    let allCourses = await Course.find({ instructor: userId })
+      .populate({
+        path: "courseContent",
+        populate: {
+          path: "subSection",
+        },
+      })
+      .exec();
+
+      // allCourses = allCourses.toObject();
+      allCourses = allCourses.map(course => course.toObject());
+
+      // console.log("all courses",allCourses);
+      for(var i = 0; i < allCourses.length; i++){
+        let totalDurationInSeconds = 0;
+        // let SubsectionLength = 0;
+        for(var j = 0; j < allCourses[i].courseContent.length; j++){
+          totalDurationInSeconds += allCourses[i].courseContent[j].subSection.reduce((acc, curr) => acc + parseInt(curr.timeDuration), 0);
+
+          allCourses[i].totalDuration = convertSecondsToDuration(totalDurationInSeconds);
+          // console.log(allCourses[i].totalDuration);
+
+        }
+      }
+      console.log("all courses",allCourses);
+    return res.status(200).json({
+      success: true,
+      data: allCourses,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch Courses",
+      error: error.message,
+    });
+  }
+};
+
