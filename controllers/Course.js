@@ -207,7 +207,100 @@ exports.updateCourse = async (req, res) => {
 }
 
 //deleteCourse
+exports.deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.body;
+        const userId = req.user.id;
 
+        const courseDetails = await Course.findById(courseId).populate({
+            path: "courseContent",
+            populate: {
+                path: "subSection",
+            },
+        });
+        //console.log(courseDetails);
+
+        //fetch videoUrl of all subSection
+        let videoUrlArray = courseDetails.courseContent.flatMap((section) => {
+            section.subSection.map((subsec) => subsec.videoUrl)
+        });
+        console.log("videourlarray", videoUrlArray);
+
+        //delete video from cloudinary
+        await deleteImage(videoUrlArray);
+
+        //remove course from instructions array
+        const userDetails = await User.findByIdAndUpdate(
+            { _id: userId },
+            {
+                $pull: {
+                    courses: courseId,
+                },
+            },
+            {
+                new: true,
+            }
+        );
+        console.log("userdetails", userDetails);
+
+        //fetch all sections of the course
+        const allSections = courseDetails.courseContent;
+
+        //delete all subsection from each section
+        for (let section of allSections) {
+            const result = await Subsection.deleteMany({
+                _id: { $in: section.subSection },
+            });
+
+            console.log("subsection delete result", result);
+        }
+
+        //delete all sections
+        await Section.deleteMany({ _id: { $in: allSections } });
+        console.log("section delete result");
+
+        //rating and review me se sare rating hatane h
+        // delete all of the rating and reviews of the course
+        await RatingAndReview.deleteMany({ course: courseDetails._id });
+
+        // console.log("rating and review result",ratingandReviewResult);
+
+        // delete course thumbnail
+        await deleteImages([courseDetails.thumbnail]);
+
+        //remove this course from corresponding course
+        await category.findByIdAndUpdate(
+            { _id: courseDetails.category },
+            { $pull: { course: courseDetails._id } }
+        );
+
+        //delete the course progress
+        await courseProgress.deleteOne({ courseId: courseID });//
+
+        //return the remaining courses to the user
+        const allCourses = await Course.find({ instructor: userId })
+            .populate({
+                path: "courseContent",
+                populate: {
+                    path: "subSection",
+                },
+            })
+            .exec();
+
+        return res.status(200).json({
+            success: true,
+            data: allCourses,
+        });
+
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
 
 // getAllCourses handler function
 
@@ -215,7 +308,19 @@ exports.showAllCourses = async (req, res) => {
     try {
         tally
         // TODO: change te below statement incrementally
-        const allCourses = await Course.find({});
+        const allCourses = await Course.find(
+            {},
+            {
+                courseName: true,
+                price: true,
+                thumbnail: true,
+                instructor: true,
+                ratingAndReviews: true,
+                studentEnrolled: true,
+            }
+        )
+        .populate("instructor")
+        .exec();
 
         return res.status(200).json({
             success: true,
