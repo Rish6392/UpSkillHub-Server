@@ -109,6 +109,7 @@ exports.capturePayment = async (req, res) => {
       message: error.message,
     });
   }
+}
 
 
 
@@ -267,4 +268,4 @@ exports.capturePayment = async (req, res) => {
       })
     }
   }
-}
+

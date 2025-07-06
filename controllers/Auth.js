@@ -71,7 +71,6 @@ exports.sendOTP = async (req, res) => {
 
 }
 
-
 //signUp
 
 exports.signUp = async (req, res) => {
@@ -173,9 +172,6 @@ exports.signUp = async (req, res) => {
     }
 }
 
-
-
-
 // Login
 exports.login = async (req, res) => {
     try {
@@ -236,7 +232,6 @@ exports.login = async (req, res) => {
         });
     }
 }
-
 
 //change password
 exports.changePassword = async (req, res) => {
