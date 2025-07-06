@@ -112,8 +112,7 @@ exports.updateSubSection = async (req, res) => {
 
 
 //HW: deleteSubSection
-const SubSection = require("../models/SubSection");
-const Section = require("../models/Section");
+
 
 exports.deleteSubSection = async (req, res) => {
     try {
