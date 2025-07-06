@@ -9,7 +9,7 @@ const contactUsRoutes = require("./routes/ContactUs")
 
 const db = require("../config/database")
 const cookieParser = require('cookie-parser');
-const cors = require("cors");
+const cors = require("cors"); // backend-frontent connect
 const {cloudinaryConnect} = require("../config/cloudinary")
 require('dotenv').config();
 const fileUpload = require("express-fileupload");
@@ -24,13 +24,14 @@ app.use(cors({
 
 app.use(fileUpload({
     useTempFiles:true,
-    tempFileDir:'/tmp/'
+    tempFileDir:'/tmp'
 }));
 
 db.connect();
 
 cloudinaryConnect();
 
+//routes mount
 app.use("/api/v1/auth",userRoutes)
 app.use("/api/v1/profile",profileRoutes)
 app.use("/api/v1/course",courseRoutes)
@@ -38,6 +39,7 @@ app.use("/api/v1/payment",paymentRoutes)
 app.use("/api/v1/contact",contactUsRoutes);
 
 
+//default route
 app.get("/",(req,res)=>{
     return res.json({
         success:true,
@@ -45,6 +47,6 @@ app.get("/",(req,res)=>{
     })
 })
 
-app.listen(PORT,()=>{
+app.listen(port,()=>{
     console.log(`Example app is listening on port ${port}`);
 })
