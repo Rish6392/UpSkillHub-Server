@@ -115,21 +115,20 @@ exports.signUp = async (req, res) => {
         }
 
         //find most recent OTP stored for the user
-        const recentOtp = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);//Sorts the matching documents by the craetedAt field in descending order (most recent first)
-        console.log(recentOtp);
-        //valdate OTP
-        if (recentOtp.length == 0) {
-            //OTP not found
+        const recentOtp = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1); // Get most recent OTP
+        console.log("Recent OTPs:", recentOtp);
+        //validate OTP
+        if (recentOtp.length === 0) {
+            // OTP not found
             return res.status(400).json({
                 success: false,
                 message: "OTP not found",
-            })
-        }
-        else if (otp !== recentOtp.otp) {  // error chatgpt saying    recentOtp[0].otp
-            //Invalid OTP 
+            });
+        } else if (otp !== recentOtp[0].otp) {
+            // Invalid OTP
             return res.status(400).json({
                 success: false,
-                message: "invald OTP",
+                message: "Invalid OTP",
             });
         }
         //Hash password  =>bcrypt package required
