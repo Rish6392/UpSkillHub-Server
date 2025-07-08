@@ -2,16 +2,16 @@ const User = require("../models/User")
 require("dotenv").config();
 const mailSender = require("../utils/mailSender");
 const bcrypt = require("bcrypt")
-
+const crypto = require("crypto");
 
 // resetPasswordToken
-exports.resetPasswordToken = async (requestAnimationFrame, res) => {
+exports.resetPasswordToken = async (req, res) => {
     try {
         // get email from req ki body
-        const { email } = req.body.email;
+        const { email } = req.body;
 
         // check user for this email,email verification
-        const user = await user.findOne({ email: email });
+        const user = await User.findOne({ email: email });
         if (!user) {
             return res.json({
                 success: false,
@@ -21,7 +21,7 @@ exports.resetPasswordToken = async (requestAnimationFrame, res) => {
         // generate token
         const token = crypto.randomUUID();
         // update user by adding token and expiration time
-        const updatedDetails = await User.findOneAndUpadte(
+        const updatedDetails = await User.findOneAndUpdate(
             { email: email },
             {
                 token: token,
@@ -78,7 +78,7 @@ exports.resetPassword = async (req, res) => {
             })
         }
         // token time check 
-        if (userDetails.resetPasswordExpires < date.now()) {
+        if (userDetails.resetPasswordExpires < Date.now()) {
             return res.json({
                 success: false,
                 message: "Token is Expired.please regernerate yur token"
@@ -89,7 +89,11 @@ exports.resetPassword = async (req, res) => {
         // password update
         await User.findOneAndUpdate(
             { token: token },
-            { password: hashedPassword },
+            {
+                password: hashedPassword,
+                token: null,
+                resetPasswordExpires: null,
+            },
             { new: true },
         )
         // return  password 
@@ -99,7 +103,7 @@ exports.resetPassword = async (req, res) => {
         })
     }
     catch (error) {
-          console.log(error);
+        console.log(error);
         return res.status(500).json({
             success: false,
             message: "Something went wrong while reset password "

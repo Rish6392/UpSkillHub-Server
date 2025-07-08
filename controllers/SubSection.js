@@ -2,6 +2,7 @@ const SubSection = require("../models/SubSection")
 const Section = require("../models/Section")
 const { uploadImageToCloudinary } = require("../utils/imageUploader")
 
+const { uploadVideoToCloudinary } = require("../utils/imageUploader");
 
 //create Subsection
 
@@ -28,13 +29,13 @@ exports.createSubSection = async (req, res) => {
             });
         }
         //uplaod video to cloudinary
-        const uploadDetails = await uploadImageToCloudinary(video, process.env.FOLDER_NAME)
+        const uploadDetails = await uploadVideoToCloudinary(video, process.env.FOLDER_NAME)
         //create a subsection
         const subSectionDetails = await SubSection.create({
             title: title,
-            timeDuartion: timeDuartion,
+            timeDuration: timeDuration,
             description: description,
-            videoUrl: uploadDetails.secure_url,
+            video: uploadDetails.secure_url,
         })
         //update section with this sub section object id
         const updatedSection = await Section.findByIdAndUpdate({ _id: sectionId },
@@ -54,7 +55,7 @@ exports.createSubSection = async (req, res) => {
         });
     }
     catch (error) {
-        return res.status(500), json({
+        return res.status(500).json({
             success: false,
             message: "Internal server error",
             error: error.message,

@@ -11,6 +11,8 @@ const Section = require("../models/Section");
 const RatingAndReview = require("../models/RatingAndReview");
 const category = require("../models/category");
 
+const fileUpload = require("express-fileupload");
+
 // createCourse handler function
 exports.createCourse = async (req, res) => {
     try {
@@ -70,7 +72,7 @@ exports.createCourse = async (req, res) => {
 
         // create an entry in db for new course
         const newCourse = await Course.create({
-            name: courseName,
+            courseName: courseName,
             courseDescription,
             instructor: instructorDetails._id,
             whatYouWillLearn,
@@ -358,7 +360,7 @@ exports.getCourseDetails = async (req, res) => {
                 }
             )
             .populate("category")
-            .populate("ratingAndreview")
+           // .populate("ratingAndreview")
             .populate({
                 path: "courseContent",
                 populate: {
