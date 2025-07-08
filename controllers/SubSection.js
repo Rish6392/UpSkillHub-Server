@@ -9,11 +9,11 @@ const { uploadVideoToCloudinary } = require("../utils/imageUploader");
 exports.createSubSection = async (req, res) => {
     try {
         //fetch data from Req body
-        const { sectionId, title, description } = req.body;
+        const { sectionId, title, description,timeDuration } = req.body;
         //extract file/vodeo
         const video = req.files.videoFile;
         //validation
-        if (!sectionId || !title || !description || !video) {
+        if (!sectionId || !title || !description || !video || !timeDuration) {
             return res.status(400).json({
                 success: false,
                 message: "Fill All fields"
@@ -30,11 +30,12 @@ exports.createSubSection = async (req, res) => {
         }
         //uplaod video to cloudinary
         const uploadDetails = await uploadVideoToCloudinary(video, process.env.FOLDER_NAME)
+        console.log("Upload Details",uploadDetails)
         //create a subsection
         const subSectionDetails = await SubSection.create({
-            title: title,
-            timeDuration: timeDuration,
-            description: description,
+            title,
+            timeDuration,
+            description,
             video: uploadDetails.secure_url,
         })
         //update section with this sub section object id

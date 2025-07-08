@@ -7,7 +7,7 @@ const {updateProfile,deleteAccount,getAllUserDetails,
 } = require("../controllers/Profile");
 
 //
-router.delete("/deleteProfile",auth, deleteAccount);
+router.post("/deleteProfile",auth, deleteAccount);
 router.put("/updateProfile",auth,updateProfile)
 
 router.get("/getUserDetails",auth,getAllUserDetails);
