@@ -149,7 +149,7 @@ exports.signUp = async (req, res) => {
             password: hashedPassword,
             accountType,
             additionalDetails: profileDetails._id,
-            image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstname} ${lastName}`,
+            image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
         })
 
         //return res
@@ -184,35 +184,35 @@ exports.login = async (req, res) => {
             });
         }
         //user cheque exist or not
-        const user = await user.findOne({ email }).populate("additional details");
-        if (!user) {
+        const foundUser = await User.findOne({ email }).populate("additionalDetails");
+        if (!foundUser) {
             return res.status(401).json({
                 success: false,
                 message: "User is not registered,please signup first",
             });
         }
         //generate JWT,after password match
-        if (await bcrypt.compare(password, user.password)) {
+        if (await bcrypt.compare(password, foundUser.password)) {
             const payload = {
-                email: user.email,
-                id: user._id,
-                accountType: user.accountType,
+                email: foundUser.email,
+                id: foundUser._id,
+                accountType: foundUser.accountType,
             }
             const token = jwt.sign(payload, process.env.JWT_SECRET, {
                 expiresIn: "24h",
             });
-            user.token = token;
-            user.password = undefined;
+            foundUser.token = token;
+            foundUser.password = undefined;
 
             //create cookie and send response
             const options = {
-                expires: new Date(date.now() + 3 * 24 * 60 * 60 * 1000),
+                expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
                 httpOnly: true,
             }
             res.cookie("token", token, options).status(200).json({
                 success: true,
                 token,
-                user,
+                foundUser,
                 message: "Logged in successfully",
             })
         }

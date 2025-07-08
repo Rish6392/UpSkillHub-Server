@@ -182,7 +182,7 @@ exports.updateDisplayPicture = async (req, res) => {
     const userId = req.user.id;
 
     // Check if a file is uploaded
-    const dp = req.files?.pfp; // Access the uploaded file
+    const dp = req.files?.displayPicture; // Access the uploaded file
     if (!dp) {
       return res.status(400).json({
         success: false,
@@ -217,6 +217,7 @@ exports.updateDisplayPicture = async (req, res) => {
       success: true,
       message: "Display picture updated successfully",
       image: user.image,
+      data:user
     });
   } catch (error) {
     console.error("Error in updateDisplayPicture:", error);
